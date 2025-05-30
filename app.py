@@ -26,6 +26,21 @@ db.init_app(app)
 def test():
     return "Website is working! Database has {} listings.".format(Listing.query.count())
 
+# Simple test routes
+@app.route('/test-home')
+def test_home():
+    return "Test Home Route Works!"
+
+@app.route('/test-listings') 
+def test_listings():
+    return "Test Listings Route Works!"
+
+@app.route('/test-admin')
+def test_admin():
+    if not session.get('admin_logged_in'):
+        return "Not logged in to admin"
+    return "Admin access works! Available forms and templates ready."
+
 # Routes
 @app.route('/')
 def index():
@@ -33,11 +48,14 @@ def index():
         featured_listings = Listing.query.filter_by(featured=True).limit(3).all()
         return render_template('index.html', featured_listings=featured_listings)
     except Exception as e:
-        return f"Error on homepage: {str(e)}", 500
+        return f"Error on homepage: {str(e)}<br><br>Template files available: {', '.join([f for f in os.listdir('templates') if f.endswith('.html')])}", 500
 
 @app.route('/listings')
 def listings():
     try:
+        # List available templates for debugging
+        template_files = [f for f in os.listdir('templates') if f.endswith('.html')]
+        
         # Get filter parameters
         county_filter = request.args.get('county', '')
         min_price = request.args.get('min_price')
@@ -91,7 +109,8 @@ def listings():
                              max_price=request.args.get('max_price', ''),
                              selected_sort=sort_by)
     except Exception as e:
-        return f"Error on listings page: {str(e)}", 500
+        template_files = [f for f in os.listdir('templates') if f.endswith('.html')]
+        return f"Error on listings page: {str(e)}<br><br>Template files available: {', '.join(template_files)}<br><br>Looking for: listings.html", 500
 
 @app.route('/listing/<int:listing_id>')
 def listing_detail(listing_id):
@@ -170,17 +189,18 @@ def admin_add_listing():
     if form.validate_on_submit():
         try:
             # Handle image upload
-            image_url = form.image_url.data
+            image_url = form.image_url.data or ''
             
             if form.image_file.data:
                 file = form.image_file.data
-                filename = secure_filename(file.filename)
-                # Add timestamp to filename to avoid conflicts
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
-                filename = timestamp + filename
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-                image_url = f'/static/uploads/{filename}'
+                if file.filename:  # Check if a file was actually selected
+                    filename = secure_filename(file.filename)
+                    # Add timestamp to filename to avoid conflicts
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                    filename = timestamp + filename
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(file_path)
+                    image_url = f'/static/uploads/{filename}'
             
             # Create new listing
             listing = Listing(
@@ -200,6 +220,7 @@ def admin_add_listing():
         except Exception as e:
             db.session.rollback()
             flash(f'Error adding listing: {str(e)}', 'error')
+            return redirect(url_for('admin_add_listing'))
     
     return render_template('admin_form.html', form=form, title='Add New Listing')
 
