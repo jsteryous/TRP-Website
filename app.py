@@ -258,12 +258,12 @@ def contact():
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('errors/404.html'), 404
+    return render_template('base.html'), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
-    return render_template('errors/500.html'), 500
+    return "Internal server error. Please try again later.", 500
 
 @app.errorhandler(413)
 def too_large(error):
@@ -297,17 +297,19 @@ def inject_stats():
 # Initialize database and create admin user
 def create_tables():
     """Initialize database tables and create default admin user"""
-    with app.app_context():
-        db.create_all()
-        
-        # Create default admin user if none exists
-        if not Admin.query.first():
-            admin = Admin(username='admin')
-            admin.set_password('password123')  # Change this in production!
-            db.session.add(admin)
-            db.session.commit()
-            print("Default admin user created: admin/password123")
+    db.create_all()
+    
+    # Create default admin user if none exists
+    if not Admin.query.first():
+        admin = Admin(username='admin')
+        admin.set_password('password123')  # Change this in production!
+        db.session.add(admin)
+        db.session.commit()
+        print("Default admin user created: admin/password123")
+
+# Create tables when app starts (works with Gunicorn)
+with app.app_context():
+    create_tables()
 
 if __name__ == '__main__':
-    create_tables()
     app.run(debug=True)
