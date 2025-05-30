@@ -67,8 +67,8 @@ def listings():
                          listings=all_listings, 
                          counties=counties,
                          selected_county=county_filter,
-                         min_price=min_price or '',
-                         max_price=max_price or '',
+                         min_price=min_price if min_price else '',
+                         max_price=max_price if max_price else '',
                          selected_sort=sort_by)
 
 @app.route('/listing/<int:listing_id>')
@@ -281,18 +281,26 @@ def date_format_filter(date):
     """Format date"""
     return date.strftime('%B %d, %Y')
 
-# Context processors
+# Context processors (simplified to avoid errors)
 @app.context_processor
 def inject_stats():
     """Make site statistics available to all templates"""
-    total_listings = Listing.query.count()
-    featured_listings = Listing.query.filter_by(featured=True).count()
-    return {
-        'site_stats': {
-            'total_listings': total_listings,
-            'featured_listings': featured_listings
+    try:
+        total_listings = Listing.query.count()
+        featured_listings = Listing.query.filter_by(featured=True).count()
+        return {
+            'site_stats': {
+                'total_listings': total_listings,
+                'featured_listings': featured_listings
+            }
         }
-    }
+    except:
+        return {
+            'site_stats': {
+                'total_listings': 0,
+                'featured_listings': 0
+            }
+        }
 
 # Initialize database and create admin user
 def create_tables():
