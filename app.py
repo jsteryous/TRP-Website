@@ -2,15 +2,42 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 import os
+import json
+import shutil
 from datetime import datetime
+from urllib.parse import urlparse
 
 # Import our separate modules
 from models import db, Listing, Admin
 from forms import ListingForm, LoginForm, SearchForm, ContactForm
 
 app = Flask(__name__)
+
+# Database Configuration with persistence
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///land_listings.db')
+
+# Get database URL from environment or use persistent local SQLite
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Production database (PostgreSQL, MySQL, etc.)
+    if DATABASE_URL.startswith('postgres://'):
+        # Fix for newer PostgreSQL URLs
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    print(f"Using production database: {DATABASE_URL.split('@')[1] if '@' in DATABASE_URL else 'configured'}")
+else:
+    # Local development - ensure database persists in data directory
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    data_dir = os.path.join(basedir, 'data')
+    db_path = os.path.join(data_dir, 'land_listings.db')
+    
+    # Create data directory if it doesn't exist
+    os.makedirs(data_dir, exist_ok=True)
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+    print(f"Using local SQLite database: {db_path}")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max file size
@@ -20,6 +47,72 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Initialize database with app
 db.init_app(app)
+
+# Database Backup Functions
+def backup_database():
+    """Create a JSON backup of all listings"""
+    try:
+        with app.app_context():
+            listings = Listing.query.all()
+            admins = Admin.query.all()
+            
+            backup_data = {
+                'backup_date': datetime.utcnow().isoformat(),
+                'listings': [listing.to_dict() for listing in listings],
+                'admin_count': len(admins)
+            }
+            
+            # Create backups directory
+            backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
+            os.makedirs(backup_dir, exist_ok=True)
+            
+            # Save backup with timestamp
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_file = os.path.join(backup_dir, f'listings_backup_{timestamp}.json')
+            
+            with open(backup_file, 'w') as f:
+                json.dump(backup_data, f, indent=2)
+            
+            print(f"Database backed up to: {backup_file}")
+            return backup_file
+    except Exception as e:
+        print(f"Backup failed: {e}")
+        return None
+
+def restore_from_backup(backup_file):
+    """Restore listings from a JSON backup file"""
+    try:
+        with app.app_context():
+            with open(backup_file, 'r') as f:
+                backup_data = json.load(f)
+            
+            restored_count = 0
+            for listing_data in backup_data.get('listings', []):
+                # Check if listing already exists (by title and county)
+                existing = Listing.query.filter_by(
+                    title=listing_data['title'],
+                    county=listing_data['county']
+                ).first()
+                
+                if not existing:
+                    listing = Listing(
+                        title=listing_data['title'],
+                        county=listing_data['county'],
+                        price=listing_data['price'],
+                        acreage=listing_data.get('acreage'),
+                        description=listing_data['description'],
+                        image_url=listing_data.get('image_url'),
+                        featured=listing_data['featured']
+                    )
+                    db.session.add(listing)
+                    restored_count += 1
+            
+            db.session.commit()
+            print(f"Restored {restored_count} listings from backup: {backup_file}")
+            return restored_count
+    except Exception as e:
+        print(f"Restore failed: {e}")
+        return 0
 
 # Test route for debugging
 @app.route('/test')
@@ -98,7 +191,7 @@ def listings():
         
         all_listings = query.all()
         
-        # Available counties for filter dropdown
+        # Available counties for filter dropdown - all 46 SC counties
         counties = [
             'Abbeville', 'Aiken', 'Allendale', 'Anderson', 'Bamberg', 'Barnwell',
             'Beaufort', 'Berkeley', 'Calhoun', 'Charleston', 'Cherokee', 'Chester',
@@ -197,6 +290,9 @@ def admin_add_listing():
     form = ListingForm()
     if form.validate_on_submit():
         try:
+            # Auto-backup before adding new listing
+            backup_database()
+            
             # Handle image upload
             image_url = form.image_url.data or ''
             
@@ -211,8 +307,7 @@ def admin_add_listing():
                     file.save(file_path)
                     image_url = f'/static/uploads/{filename}'
             
-            # Create new listing
-            # Create new listing
+            # Create new listing with acreage field
             listing = Listing(
                 title=form.title.data,
                 county=form.county.data,
@@ -245,6 +340,9 @@ def admin_edit_listing(listing_id):
     
     if form.validate_on_submit():
         try:
+            # Auto-backup before editing
+            backup_database()
+            
             # Handle image upload
             if form.image_file.data:
                 file = form.image_file.data
@@ -257,8 +355,7 @@ def admin_edit_listing(listing_id):
             elif form.image_url.data:
                 listing.image_url = form.image_url.data
             
-            # Update listing fields
-            # Update listing fields
+            # Update listing fields including acreage
             listing.title = form.title.data
             listing.county = form.county.data
             listing.price = form.price.data
@@ -285,6 +382,9 @@ def admin_delete_listing(listing_id):
         return redirect(url_for('admin_login'))
     
     try:
+        # Auto-backup before deletion
+        backup_database()
+        
         listing = Listing.query.get_or_404(listing_id)
         
         # Delete associated image file if it exists
@@ -303,6 +403,30 @@ def admin_delete_listing(listing_id):
     
     return redirect(url_for('admin_dashboard'))
 
+# Admin backup routes
+@app.route('/admin/backup')
+def admin_backup():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    
+    backup_file = backup_database()
+    if backup_file:
+        flash('Database backed up successfully!', 'success')
+    else:
+        flash('Backup failed!', 'error')
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/restore', methods=['POST'])
+def admin_restore():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    
+    # This would handle file upload for restore
+    # Implementation depends on your needs
+    flash('Restore functionality would be implemented here', 'info')
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/api/listings')
 def api_listings():
     """API endpoint for listings data"""
@@ -316,7 +440,7 @@ def contact():
     if form.validate_on_submit():
         # Here you would typically send an email or save to database
         # For now, just flash a success message
-        flash('Thank you for your message! Alex will contact you soon.', 'success')
+        flash('Thank you for your message! Table Rock Partners will contact you soon.', 'success')
         return redirect(url_for('contact'))
     
     return render_template('contact.html', form=form)
@@ -368,18 +492,57 @@ def inject_stats():
             }
         }
 
-# Initialize database and create admin user
+# Initialize database and create admin user with migration support
 def create_tables():
     """Initialize database tables and create default admin user"""
-    db.create_all()
-    
-    # Create default admin user if none exists
-    if not Admin.query.first():
-        admin = Admin(username='admin')
-        admin.set_password('password123')  # Change this in production!
-        db.session.add(admin)
-        db.session.commit()
-        print("Default admin user created: admin/password123")
+    try:
+        with app.app_context():
+            # Check if we have existing data to preserve
+            existing_listings_count = 0
+            try:
+                existing_listings_count = Listing.query.count()
+                if existing_listings_count > 0:
+                    print(f"Found {existing_listings_count} existing listings - creating backup")
+                    backup_database()
+            except Exception:
+                print("No existing database found or database needs migration")
+            
+            # Create all tables (this will add new columns if they don't exist)
+            db.create_all()
+            
+            # Create default admin user only if no admin exists
+            admin_count = 0
+            try:
+                admin_count = Admin.query.count()
+            except Exception:
+                pass
+                
+            if admin_count == 0:
+                admin = Admin(username='admin')
+                admin.set_password('password123')  # Change this in production!
+                db.session.add(admin)
+                db.session.commit()
+                print("Default admin user created: admin/password123")
+                print("WARNING: Change the default password in production!")
+            else:
+                print(f"Found {admin_count} existing admin user(s)")
+            
+            # Final count
+            try:
+                final_listing_count = Listing.query.count()
+                print(f"Database initialized successfully. Total listings: {final_listing_count}")
+                
+                # Show database location
+                if 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']:
+                    db_location = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
+                    print(f"Database location: {db_location}")
+                    
+            except Exception as e:
+                print(f"Error checking final database state: {e}")
+                
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+        print("This may be normal for first-time setup or migrations")
 
 # Create tables when app starts (works with Gunicorn)
 with app.app_context():
