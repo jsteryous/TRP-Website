@@ -1,0 +1,674 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-4 fw-bold mb-4 animate-fade-in">Buy Land with Confidence</h1>
+                <p class="lead mb-4 animate-fade-in-delay">Discover beautiful properties across South Carolina with local expertise and transparent processes.</p>
+                <div class="hero-buttons animate-fade-in-delay-2">
+                    <a href="{{ url_for('listings') }}" class="btn btn-primary btn-lg me-3 mb-2">
+                        <i class="fas fa-search me-2"></i>View All Listings
+                    </a>
+                    <a href="#about" class="btn btn-outline-light btn-lg mb-2">
+                        <i class="fas fa-info-circle me-2"></i>Learn More
+                    </a>
+                </div>
+                <div class="hero-stats mt-5 animate-fade-in-delay-3">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-3">
+                            <div class="stat-item">
+                                <h3 class="display-6 fw-bold">{{ featured_listings|length + 12 }}</h3>
+                                <p class="mb-0">Properties Sold</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="stat-item">
+                                <h3 class="display-6 fw-bold">5+</h3>
+                                <p class="mb-0">Years Experience</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="stat-item">
+                                <h3 class="display-6 fw-bold">100%</h3>
+                                <p class="mb-0">Satisfaction Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll Down Indicator -->
+    <div class="scroll-indicator">
+        <a href="#featured" class="text-white">
+            <i class="fas fa-chevron-down fa-2x animate-bounce"></i>
+        </a>
+    </div>
+</section>
+
+<!-- Featured Listings -->
+<section class="py-5" id="featured">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold section-title">Featured Listings</h2>
+                <div class="title-underline mx-auto mb-3"></div>
+                <p class="lead text-muted">Handpicked properties perfect for your next investment</p>
+            </div>
+        </div>
+        
+        {% if featured_listings %}
+        <div class="row">
+            {% for listing in featured_listings %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card listing-card h-100 featured-card">
+                    <div class="position-relative">
+                        {% if listing.image_url %}
+                        <img src="{{ listing.image_url }}" class="card-img-top" alt="{{ listing.title }}">
+                        {% else %}
+                        <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+                             class="card-img-top" alt="Land property">
+                        {% endif %}
+                        
+                        <!-- Featured Badge -->
+                        <div class="position-absolute top-0 start-0 m-3">
+                            <span class="badge bg-warning text-dark featured-badge">
+                                <i class="fas fa-star me-1"></i>Featured
+                            </span>
+                        </div>
+                        
+                        <!-- Quick Actions Overlay -->
+                        <div class="card-overlay">
+                            <div class="overlay-content">
+                                <a href="{{ url_for('listing_detail', listing_id=listing.id) }}" 
+                                   class="btn btn-light btn-sm me-2">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                                <a href="mailto:alex@landbyalex.com?subject=Inquiry about {{ listing.title }}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-envelope me-1"></i>Inquire
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body d-flex flex-column">
+                        <div class="listing-location mb-2">
+                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                            <span class="text-muted">{{ listing.county }} County, SC</span>
+                        </div>
+                        
+                        <h5 class="card-title listing-title">{{ listing.title }}</h5>
+                        
+                        <p class="card-text flex-grow-1 listing-description">
+                            {{ listing.description[:100] }}{% if listing.description|length > 100 %}...{% endif %}
+                        </p>
+                        
+                        <!-- Property Features (if you want to add them later) -->
+                        <div class="property-features mb-3">
+                            <span class="feature-tag">
+                                <i class="fas fa-expand-arrows-alt me-1"></i>
+                                {{ "%.1f"|format(listing.price / 5000) }} Acres*
+                            </span>
+                        </div>
+                        
+                        <div class="listing-footer mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="price-section">
+                                    <span class="price-tag">${{ "{:,.0f}".format(listing.price) }}</span>
+                                    <small class="text-muted d-block">Total Price</small>
+                                </div>
+                                <a href="{{ url_for('listing_detail', listing_id=listing.id) }}" 
+                                   class="btn btn-primary">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- No Featured Listings State -->
+        <div class="row">
+            <div class="col-12 text-center py-5">
+                <div class="no-listings-state">
+                    <i class="fas fa-map-marked-alt fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted mb-3">Featured Listings Coming Soon</h4>
+                    <p class="text-muted mb-4">We're preparing some amazing properties to showcase here.</p>
+                    <a href="{{ url_for('listings') }}" class="btn btn-primary">
+                        Browse All Available Properties
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- View All Button -->
+        {% if featured_listings %}
+        <div class="text-center mt-5">
+            <a href="{{ url_for('listings') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-th-large me-2"></i>View All Listings
+            </a>
+            <p class="text-muted mt-2 mb-0">
+                <small>*Acreage estimates based on average price per acre. See individual listings for exact details.</small>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Why Work With Us -->
+<section class="py-5 bg-light" id="about">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold section-title">Why Work With Us</h2>
+                <div class="title-underline mx-auto mb-3"></div>
+                <p class="lead text-muted">Your land purchase journey made simple and secure</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Feature 1 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card text-center h-100">
+                    <div class="feature-icon-wrapper mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                    </div>
+                    <h4 class="feature-title">Local Expertise</h4>
+                    <p class="feature-description">
+                        Deep knowledge of South Carolina counties, zoning laws, and land values. 
+                        I've been helping people find their perfect piece of land for over 5 years.
+                    </p>
+                    <div class="feature-details">
+                        <ul class="list-unstyled text-muted">
+                            <li><i class="fas fa-check text-success me-2"></i>County regulations knowledge</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Zoning and permits guidance</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Market value expertise</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card text-center h-100">
+                    <div class="feature-icon-wrapper mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                    </div>
+                    <h4 class="feature-title">Owner Financing Available</h4>
+                    <p class="feature-description">
+                        Flexible financing options to make your land ownership dreams more accessible. 
+                        No bank hassles, competitive rates, and terms that work for you.
+                    </p>
+                    <div class="feature-details">
+                        <ul class="list-unstyled text-muted">
+                            <li><i class="fas fa-check text-success me-2"></i>Flexible down payments</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Competitive interest rates</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Custom payment terms</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="feature-card text-center h-100">
+                    <div class="feature-icon-wrapper mb-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    </div>
+                    <h4 class="feature-title">Transparent Process</h4>
+                    <p class="feature-description">
+                        Clear communication, honest pricing, and no hidden fees throughout your purchase. 
+                        You'll know exactly what you're getting and what you're paying.
+                    </p>
+                    <div class="feature-details">
+                        <ul class="list-unstyled text-muted">
+                            <li><i class="fas fa-check text-success me-2"></i>No hidden fees</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Clear documentation</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Honest assessments</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="display-5 fw-bold section-title">What Our Clients Say</h2>
+                <div class="title-underline mx-auto mb-3"></div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <blockquote class="blockquote">
+                        <p>"Alex made buying our dream property so easy. His knowledge of the area and honest approach gave us complete confidence in our purchase."</p>
+                    </blockquote>
+                    <div class="testimonial-author">
+                        <strong>Sarah & Mike Johnson</strong>
+                        <small class="text-muted d-block">Purchased 15 acres in Oconee County</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <blockquote class="blockquote">
+                        <p>"The owner financing option was a game-changer for us. Alex worked with our budget and made land ownership possible."</p>
+                    </blockquote>
+                    <div class="testimonial-author">
+                        <strong>David Thompson</strong>
+                        <small class="text-muted d-block">Purchased 8 acres in Pickens County</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-stars mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <blockquote class="blockquote">
+                        <p>"Professional, responsive, and genuinely cares about finding the right property for each client. Highly recommend!"</p>
+                    </blockquote>
+                    <div class="testimonial-author">
+                        <strong>Jennifer Williams</strong>
+                        <small class="text-muted d-block">Purchased 12 acres in Anderson County</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 cta-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center">
+                <div class="cta-content">
+                    <h2 class="display-5 fw-bold mb-4 text-white">Ready to Find Your Perfect Land?</h2>
+                    <p class="lead mb-4 text-white opacity-90">
+                        Browse our current listings or get in touch to discuss your specific needs. 
+                        Let's make your land ownership dreams a reality.
+                    </p>
+                    <div class="cta-buttons d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="{{ url_for('listings') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-search me-2"></i>Browse Listings
+                        </a>
+                        <a href="mailto:alex@landbyalex.com?subject=Land Inquiry&body=Hi Alex,%0D%0A%0D%0AI'm interested in learning more about available land properties.%0D%0A%0D%0APlease contact me to discuss my needs.%0D%0A%0D%0AThank you!" 
+                           class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-envelope me-2"></i>Contact Alex
+                        </a>
+                        <a href="tel:+1234567890" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-phone me-2"></i>Call Now
+                        </a>
+                    </div>
+                    
+                    <!-- Contact Info -->
+                    <div class="contact-info mt-5 pt-4 border-top border-light border-opacity-25">
+                        <div class="row text-center text-white">
+                            <div class="col-md-4 mb-3">
+                                <i class="fas fa-envelope fa-2x mb-2 opacity-75"></i>
+                                <p class="mb-0">alex@landbyalex.com</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <i class="fas fa-phone fa-2x mb-2 opacity-75"></i>
+                                <p class="mb-0">(123) 456-7890</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <i class="fas fa-map-marker-alt fa-2x mb-2 opacity-75"></i>
+                                <p class="mb-0">Serving South Carolina</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Hero Section Enhancements */
+.hero-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(44, 85, 48, 0.8), rgba(74, 124, 89, 0.6));
+    z-index: 1;
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+.scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+/* Animations */
+.animate-fade-in {
+    animation: fadeInUp 1s ease-out;
+}
+
+.animate-fade-in-delay {
+    animation: fadeInUp 1s ease-out 0.3s both;
+}
+
+.animate-fade-in-delay-2 {
+    animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+.animate-fade-in-delay-3 {
+    animation: fadeInUp 1s ease-out 0.9s both;
+}
+
+.animate-bounce {
+    animation: bounce 2s infinite;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Section Titles */
+.section-title {
+    position: relative;
+    color: var(--primary-color);
+}
+
+.title-underline {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+/* Enhanced Cards */
+.featured-card {
+    transition: all 0.3s ease;
+    border: none;
+    overflow: hidden;
+}
+
+.featured-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(44, 85, 48, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.featured-card:hover .card-overlay {
+    opacity: 1;
+}
+
+.featured-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+/* Feature Cards */
+.feature-card {
+    padding: 30px 20px;
+    border-radius: 15px;
+    background: white;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 30px rgba(44, 85, 48, 0.1);
+}
+
+.feature-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    position: relative;
+}
+
+.feature-icon-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    opacity: 0.2;
+    transform: scale(1.2);
+}
+
+.feature-icon {
+    color: white;
+    font-size: 2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.feature-title {
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+/* Testimonials */
+.testimonial-card {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.testimonial-stars {
+    text-align: center;
+}
+
+.blockquote {
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+.testimonial-author {
+    text-align: center;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+/* CTA Section */
+.cta-section {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>') repeat;
+    animation: float 20s linear infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateX(-50px) translateY(-50px);
+    }
+    100% {
+        transform: translateX(50px) translateY(50px);
+    }
+}
+
+.cta-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Property Features */
+.feature-tag {
+    background: var(--accent-color);
+    color: var(--primary-color);
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.listing-title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.listing-description {
+    color: #666;
+    line-height: 1.6;
+}
+
+/* Hero Stats */
+.hero-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 30px 20px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item h3 {
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.stat-item p {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 80px 0;
+    }
+    
+    .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .cta-buttons .btn {
+        width: 100%;
+        max-width: 300px;
+        margin-bottom: 10px;
+    }
+}
+</style>
+{% endblock %}

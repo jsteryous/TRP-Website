@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin - Land by Alex{% endblock %}
+
+{% block content %}
+<!-- Admin Navigation -->
+<nav class="navbar navbar-expand-lg admin-navbar">
+    <div class="container">
+        <span class="navbar-brand text-white">
+            <i class="fas fa-cog me-2"></i>{{ title }}
+        </span>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white" href="{{ url_for('admin_dashboard') }}">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+            <a class="nav-link text-white" href="{{ url_for('admin_logout') }}">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-{% if listing %}edit{% else %}plus{% endif %} me-2"></i>
+                        {{ title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="listingForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Title and County Row -->
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                {{ form.title.label(class="form-label") }}
+                                <span class="text-danger">*</span>
+                                {{ form.title(class="form-control", placeholder="e.g., 10 Beautiful Acres with Creek Access") }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.title.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.county.label(class="form-label") }}
+                                <span class="text-danger">*</span>
+                                {{ form.county(class="form-select") }}
+                                {% if form.county.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.county.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Price and Featured Row -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.price.label(class="form-label") }}
+                                <span class="text-danger">*</span>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                                    {{ form.price(class="form-control", placeholder="65000") }}
+                                </div>
+                                {% if form.price.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.price.errors %}
+                                            <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Enter amount without commas or dollar sign</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.featured.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-star"></i></span>
+                                    {{ form.featured(class="form-select") }}
+                                </div>
+                                <small class="form-text text-muted">Featured listings appear on the homepage</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="mb-4">
+                            {{ form.description.label(class="form-label") }}
+                            <span class="text-danger">*</span>
+                            {{ form.description(class="form-control", rows="5", placeholder="Describe the property features, location, amenities, topography, access roads, utilities available, etc. Be detailed to help potential buyers understand what makes this property special.") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.description.errors %}
+                                        <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                <span id="charCount">0</span> characters. Be descriptive - buyers want details!
+                            </small>
+                        </div>
+                        
+                        <!-- Image Section -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-image me-2"></i>Property Image
+                            </label>
+                            
+                            <!-- Current Image Display (for editing) -->
+                            {% if listing and listing.image_url %}
+                            <div class="mb-3 p-3 border rounded bg-light">
+                                <h6 class="text-muted mb-2">Current Image:</h6>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ listing.image_url }}" alt="Current property image" 
+                                         style="width: 150px; height: 100px; object-fit: cover;" 
+                                         class="rounded border me-3" id="currentImage">
+                                    <div>
+                                        <small class="text-muted d-block">Currently displayed image</small>
+                                        <small class="text-muted">Upload a new image or enter a URL below to replace</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Image URL Input -->
+                            <div class="mb-3">
+                                <label for="image_url" class="form-label">Image URL</label>
+                                {{ form.image_url(class="form-control", placeholder="https://example.com/property-image.jpg", id="image_url") }}
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Paste a direct link to an image (JPG, PNG, WebP)
+                                </small>
+                            </div>
+                            
+                            <!-- OR Divider -->
+                            <div class="text-center mb-3">
+                                <span class="badge bg-secondary px-3">OR</span>
+                            </div>
+                            
+                            <!-- File Upload -->
+                            <div class="mb-3">
+                                <label for="image_file" class="form-label">Upload Image File</label>
+                                {{ form.image_file(class="form-control", accept="image/*", id="image_file") }}
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-upload me-1"></i>
+                                    Supported formats: JPG, PNG, WebP • Max size: 5MB • Recommended: 1200x800px
+                                </small>
+                            </div>
+                            
+                            <!-- Image Preview Area -->
+                            <div id="imagePreviewArea" class="mt-3" style="display: none;">
+                                <h6 class="text-muted">Preview:</h6>
+                                <div class="border rounded p-2 bg-light">
+                                    <img id="imagePreview" src="" alt="Image preview" 
+                                         style="max-width: 200px; max-height: 150px; object-fit: cover;" 
+                                         class="rounded">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div>
+                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                </div>
+                                
+                                <div class="d-flex gap-2 flex-wrap">
+                                    {% if listing %}
+                                    <a href="{{ url_for('listing_detail', listing_id=listing.id) }}" 
+                                       class="btn btn-outline-info" target="_blank">
+                                        <i class="fas fa-external-link-alt me-2"></i>View Live
+                                    </a>
+                                    
+                                    <a href="{{ url_for('admin_delete_listing', listing_id=listing.id) }}" 
+                                       class="btn btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this listing? This action cannot be undone.')">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a>
+                                    {% endif %}
+                                    
+                                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                        <i class="fas fa-save me-2"></i>
+                                        {% if listing %}Update Listing{% else %}Create Listing{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Card -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tips for Great Listings</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Title Best Practices:</h6>
+                            <ul class="small mb-3">
+                                <li>Include acreage (e.g., "10 Acres")</li>
+                                <li>Mention key features (creek, views, etc.)</li>
+                                <li>Keep it under 60 characters</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Description Essentials:</h6>
+                            <ul class="small mb-3">
+                                <li>Topography and terrain details</li>
+                                <li>Access roads and utilities</li>
+                                <li>Nearby amenities and towns</li>
+                                <li>Potential uses and restrictions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for description
+    const descriptionField = document.getElementById('description');
+    const charCount = document.getElementById('charCount');
+    
+    function updateCharCount() {
+        const length = descriptionField.value.length;
+        charCount.textContent = length;
+        
+        if (length < 100) {
+            charCount.className = 'text-warning';
+        } else if (length > 500) {
+            charCount.className = 'text-success';
+        } else {
+            charCount.className = 'text-info';
+        }
+    }
+    
+    descriptionField.addEventListener('input', updateCharCount);
+    updateCharCount(); // Initial count
+    
+    // Image URL preview
+    const imageUrlField = document.getElementById('image_url');
+    const imagePreviewArea = document.getElementById('imagePreviewArea');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    function showImagePreview(src, isFile = false) {
+        imagePreview.src = src;
+        imagePreviewArea.style.display = 'block';
+        
+        imagePreview.onerror = function() {
+            imagePreviewArea.style.display = 'none';
+            if (!isFile) {
+                // Show error for URL
+                showImageError('Invalid image URL or image failed to load');
+            }
+        };
+        
+        imagePreview.onload = function() {
+            hideImageError();
+        };
+    }
+    
+    function hideImagePreview() {
+        imagePreviewArea.style.display = 'none';
+        hideImageError();
+    }
+    
+    function showImageError(message) {
+        let errorDiv = document.getElementById('imageError');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.id = 'imageError';
+            errorDiv.className = 'alert alert-warning mt-2';
+            imageUrlField.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + message;
+    }
+    
+    function hideImageError() {
+        const errorDiv = document.getElementById('imageError');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+    
+    // URL input preview
+    imageUrlField.addEventListener('input', function() {
+        const url = this.value.trim();
+        
+        if (url && isValidImageUrl(url)) {
+            showImagePreview(url);
+        } else if (url) {
+            showImageError('Please enter a valid image URL (must start with http:// or https://)');
+            hideImagePreview();
+        } else {
+            hideImagePreview();
+        }
+    });
+    
+    function isValidImageUrl(url) {
+        return url.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i) || 
+               url.match(/^https?:\/\/.+/) && !url.includes(' ');
+    }
+    
+    // File upload preview
+    const imageFileField = document.getElementById('image_file');
+    imageFileField.addEventListener('change', function() {
+        const file = this.files[0];
+        
+        if (file) {
+            // Clear URL field when file is selected
+            imageUrlField.value = '';
+            
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                showImageError('Please select a valid image file (JPG, PNG, GIF, WebP)');
+                hideImagePreview();
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                showImageError('File size must be less than 5MB');
+                hideImagePreview();
+                return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                showImagePreview(e.target.result, true);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            hideImagePreview();
+        }
+    });
+    
+    // Clear file when URL is entered
+    imageUrlField.addEventListener('input', function() {
+        if (this.value.trim()) {
+            imageFileField.value = '';
+        }
+    });
+    
+    // Form validation
+    const form = document.getElementById('listingForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    form.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+        
+        // Re-enable button after 3 seconds in case of error
+        setTimeout(function() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>{% if listing %}Update Listing{% else %}Create Listing{% endif %}';
+        }, 3000);
+    });
+    
+    // Auto-save draft (optional enhancement)
+    let autoSaveTimeout;
+    const formFields = form.querySelectorAll('input, textarea, select');
+    
+    formFields.forEach(field => {
+        field.addEventListener('input', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(function() {
+                // Could implement auto-save to localStorage here
+                console.log('Auto-save triggered');
+            }, 2000);
+        });
+    });
+});
+</script>
+
+<style>
+.admin-navbar {
+    background-color: var(--secondary-color) !important;
+}
+
+#imagePreviewArea {
+    border: 2px dashed #dee2e6;
+    transition: all 0.3s ease;
+}
+
+#imagePreviewArea:hover {
+    border-color: var(--primary-color);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 85, 48, 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 85, 48, 0.25);
+}
+
+#charCount {
+    font-weight: bold;
+}
+
+.card-header.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+</style>
+{% endblock %}
