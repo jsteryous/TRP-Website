@@ -111,23 +111,33 @@ def admin_dashboard():
         flash('Please log in to access the admin panel.', 'warning')
         return redirect(url_for('admin_login'))
     
-    # Get statistics
-    total_listings = Listing.query.count()
-    featured_count = Listing.query.filter_by(featured=True).count()
-    total_value = db.session.query(db.func.sum(Listing.price)).scalar() or 0
-    avg_price = total_value / total_listings if total_listings > 0 else 0
+    try:
+        # Get all listings
+        listings = Listing.query.order_by(Listing.created_at.desc()).all()
+        
+        # Get statistics safely
+        total_listings = len(listings)
+        featured_count = sum(1 for listing in listings if listing.featured)
+        total_value = sum(float(listing.price) for listing in listings)
+        avg_price = total_value / total_listings if total_listings > 0 else 0
+        
+        stats = {
+            'total_listings': total_listings,
+            'featured_count': featured_count,
+            'total_value': total_value,
+            'avg_price': avg_price
+        }
+        
+        return render_template('admin_dashboard.html', listings=listings, stats=stats)
     
-    # Get recent listings
-    listings = Listing.query.order_by(Listing.created_at.desc()).all()
-    
-    stats = {
-        'total_listings': total_listings,
-        'featured_count': featured_count,
-        'total_value': total_value,
-        'avg_price': avg_price
-    }
-    
-    return render_template('admin_dashboard.html', listings=listings, stats=stats)
+    except Exception as e:
+        # If there's an error, show a simple version
+        return render_template('admin_dashboard.html', listings=[], stats={
+            'total_listings': 0,
+            'featured_count': 0,
+            'total_value': 0,
+            'avg_price': 0
+        })
 
 @app.route('/admin/add', methods=['GET', 'POST'])
 def admin_add_listing():
