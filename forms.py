@@ -63,6 +63,11 @@ class ListingForm(FlaskForm):
         NumberRange(min=1000, max=10000000, message="Price must be between $1,000 and $10,000,000")
     ])
     
+    acreage = DecimalField('Acreage', validators=[
+        Optional(),
+        NumberRange(min=0.1, max=10000, message="Acreage must be between 0.1 and 10,000 acres")
+    ])
+    
     description = TextAreaField('Property Description', validators=[
         DataRequired(message="Please provide a property description"),
         Length(min=50, max=2000, message="Description must be between 50 and 2000 characters")

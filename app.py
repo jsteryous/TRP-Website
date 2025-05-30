@@ -212,10 +212,12 @@ def admin_add_listing():
                     image_url = f'/static/uploads/{filename}'
             
             # Create new listing
+            # Create new listing
             listing = Listing(
                 title=form.title.data,
                 county=form.county.data,
                 price=form.price.data,
+                acreage=form.acreage.data,
                 description=form.description.data,
                 image_url=image_url,
                 featured=bool(int(form.featured.data))
@@ -256,9 +258,11 @@ def admin_edit_listing(listing_id):
                 listing.image_url = form.image_url.data
             
             # Update listing fields
+            # Update listing fields
             listing.title = form.title.data
             listing.county = form.county.data
             listing.price = form.price.data
+            listing.acreage = form.acreage.data
             listing.description = form.description.data
             listing.featured = bool(int(form.featured.data))
             
