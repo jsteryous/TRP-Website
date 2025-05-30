@@ -21,55 +21,77 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Initialize database with app
 db.init_app(app)
 
+# Test route for debugging
+@app.route('/test')
+def test():
+    return "Website is working! Database has {} listings.".format(Listing.query.count())
+
 # Routes
 @app.route('/')
 def index():
-    featured_listings = Listing.query.filter_by(featured=True).limit(3).all()
-    return render_template('index.html', featured_listings=featured_listings)
+    try:
+        featured_listings = Listing.query.filter_by(featured=True).limit(3).all()
+        return render_template('index.html', featured_listings=featured_listings)
+    except Exception as e:
+        return f"Error on homepage: {str(e)}", 500
 
 @app.route('/listings')
 def listings():
-    # Get filter parameters
-    county_filter = request.args.get('county', '')
-    min_price = request.args.get('min_price', type=float)
-    max_price = request.args.get('max_price', type=float)
-    sort_by = request.args.get('sort', 'newest')
-    
-    # Build query
-    query = Listing.query
-    
-    # Apply filters
-    if county_filter:
-        query = query.filter(Listing.county == county_filter)
-    if min_price:
-        query = query.filter(Listing.price >= min_price)
-    if max_price:
-        query = query.filter(Listing.price <= max_price)
-    
-    # Apply sorting
-    if sort_by == 'oldest':
-        query = query.order_by(Listing.created_at.asc())
-    elif sort_by == 'price_low':
-        query = query.order_by(Listing.price.asc())
-    elif sort_by == 'price_high':
-        query = query.order_by(Listing.price.desc())
-    elif sort_by == 'featured':
-        query = query.order_by(Listing.featured.desc(), Listing.created_at.desc())
-    else:  # newest (default)
-        query = query.order_by(Listing.created_at.desc())
-    
-    all_listings = query.all()
-    
-    # Available counties for filter dropdown
-    counties = ['Oconee', 'Pickens', 'Anderson', 'Greenville', 'Spartanburg', 'Cherokee', 'Union', 'Laurens']
-    
-    return render_template('listings.html', 
-                         listings=all_listings, 
-                         counties=counties,
-                         selected_county=county_filter,
-                         min_price=min_price if min_price else '',
-                         max_price=max_price if max_price else '',
-                         selected_sort=sort_by)
+    try:
+        # Get filter parameters
+        county_filter = request.args.get('county', '')
+        min_price = request.args.get('min_price')
+        max_price = request.args.get('max_price')
+        sort_by = request.args.get('sort', 'newest')
+        
+        # Convert price strings to floats safely
+        try:
+            min_price = float(min_price) if min_price else None
+        except (ValueError, TypeError):
+            min_price = None
+            
+        try:
+            max_price = float(max_price) if max_price else None
+        except (ValueError, TypeError):
+            max_price = None
+        
+        # Build query
+        query = Listing.query
+        
+        # Apply filters
+        if county_filter:
+            query = query.filter(Listing.county == county_filter)
+        if min_price:
+            query = query.filter(Listing.price >= min_price)
+        if max_price:
+            query = query.filter(Listing.price <= max_price)
+        
+        # Apply sorting
+        if sort_by == 'oldest':
+            query = query.order_by(Listing.created_at.asc())
+        elif sort_by == 'price_low':
+            query = query.order_by(Listing.price.asc())
+        elif sort_by == 'price_high':
+            query = query.order_by(Listing.price.desc())
+        elif sort_by == 'featured':
+            query = query.order_by(Listing.featured.desc(), Listing.created_at.desc())
+        else:  # newest (default)
+            query = query.order_by(Listing.created_at.desc())
+        
+        all_listings = query.all()
+        
+        # Available counties for filter dropdown
+        counties = ['Oconee', 'Pickens', 'Anderson', 'Greenville', 'Spartanburg', 'Cherokee', 'Union', 'Laurens']
+        
+        return render_template('listings.html', 
+                             listings=all_listings, 
+                             counties=counties,
+                             selected_county=county_filter,
+                             min_price=request.args.get('min_price', ''),
+                             max_price=request.args.get('max_price', ''),
+                             selected_sort=sort_by)
+    except Exception as e:
+        return f"Error on listings page: {str(e)}", 500
 
 @app.route('/listing/<int:listing_id>')
 def listing_detail(listing_id):
