@@ -10,6 +10,7 @@ class Listing(db.Model):
     title = db.Column(db.String(200), nullable=False)
     county = db.Column(db.String(100), nullable=False)
     price = db.Column(Numeric(10, 2), nullable=False)
+    acreage = db.Column(Numeric(8, 2), nullable=True)  # New field for actual acreage
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.String(500))
     featured = db.Column(db.Boolean, default=False)
@@ -18,12 +19,27 @@ class Listing(db.Model):
     def __repr__(self):
         return f'<Listing {self.title}>'
     
+    def get_price_per_acre(self):
+        """Calculate price per acre if acreage is available"""
+        if self.acreage and self.acreage > 0:
+            return float(self.price) / float(self.acreage)
+        return None
+    
+    def get_display_acreage(self):
+        """Get the acreage for display, with fallback to estimate"""
+        if self.acreage:
+            return float(self.acreage)
+        else:
+            # Fallback to estimate (you can adjust this multiplier)
+            return float(self.price) / 5000
+    
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'county': self.county,
             'price': float(self.price),
+            'acreage': float(self.acreage) if self.acreage else None,
             'description': self.description,
             'image_url': self.image_url,
             'featured': self.featured,
