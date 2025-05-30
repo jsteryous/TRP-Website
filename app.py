@@ -99,7 +99,16 @@ def listings():
         all_listings = query.all()
         
         # Available counties for filter dropdown
-        counties = ['Oconee', 'Pickens', 'Anderson', 'Greenville', 'Spartanburg', 'Cherokee', 'Union', 'Laurens']
+        counties = [
+            'Abbeville', 'Aiken', 'Allendale', 'Anderson', 'Bamberg', 'Barnwell',
+            'Beaufort', 'Berkeley', 'Calhoun', 'Charleston', 'Cherokee', 'Chester',
+            'Chesterfield', 'Clarendon', 'Colleton', 'Darlington', 'Dillon',
+            'Dorchester', 'Edgefield', 'Fairfield', 'Florence', 'Georgetown',
+            'Greenville', 'Greenwood', 'Hampton', 'Horry', 'Jasper', 'Kershaw',
+            'Lancaster', 'Laurens', 'Lee', 'Lexington', 'Marion', 'Marlboro',
+            'McCormick', 'Newberry', 'Oconee', 'Orangeburg', 'Pickens', 'Richland',
+            'Saluda', 'Spartanburg', 'Sumter', 'Union', 'Williamsburg', 'York'
+        ]
         
         return render_template('listings.html', 
                              listings=all_listings, 

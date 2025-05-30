@@ -10,14 +10,52 @@ class ListingForm(FlaskForm):
     ])
     
     county = SelectField('County', choices=[
-        ('Oconee', 'Oconee County'),
-        ('Pickens', 'Pickens County'),
+        ('Abbeville', 'Abbeville County'),
+        ('Aiken', 'Aiken County'),
+        ('Allendale', 'Allendale County'),
         ('Anderson', 'Anderson County'),
-        ('Greenville', 'Greenville County'),
-        ('Spartanburg', 'Spartanburg County'),
+        ('Bamberg', 'Bamberg County'),
+        ('Barnwell', 'Barnwell County'),
+        ('Beaufort', 'Beaufort County'),
+        ('Berkeley', 'Berkeley County'),
+        ('Calhoun', 'Calhoun County'),
+        ('Charleston', 'Charleston County'),
         ('Cherokee', 'Cherokee County'),
+        ('Chester', 'Chester County'),
+        ('Chesterfield', 'Chesterfield County'),
+        ('Clarendon', 'Clarendon County'),
+        ('Colleton', 'Colleton County'),
+        ('Darlington', 'Darlington County'),
+        ('Dillon', 'Dillon County'),
+        ('Dorchester', 'Dorchester County'),
+        ('Edgefield', 'Edgefield County'),
+        ('Fairfield', 'Fairfield County'),
+        ('Florence', 'Florence County'),
+        ('Georgetown', 'Georgetown County'),
+        ('Greenville', 'Greenville County'),
+        ('Greenwood', 'Greenwood County'),
+        ('Hampton', 'Hampton County'),
+        ('Horry', 'Horry County'),
+        ('Jasper', 'Jasper County'),
+        ('Kershaw', 'Kershaw County'),
+        ('Lancaster', 'Lancaster County'),
+        ('Laurens', 'Laurens County'),
+        ('Lee', 'Lee County'),
+        ('Lexington', 'Lexington County'),
+        ('Marion', 'Marion County'),
+        ('Marlboro', 'Marlboro County'),
+        ('McCormick', 'McCormick County'),
+        ('Newberry', 'Newberry County'),
+        ('Oconee', 'Oconee County'),
+        ('Orangeburg', 'Orangeburg County'),
+        ('Pickens', 'Pickens County'),
+        ('Richland', 'Richland County'),
+        ('Saluda', 'Saluda County'),
+        ('Spartanburg', 'Spartanburg County'),
+        ('Sumter', 'Sumter County'),
         ('Union', 'Union County'),
-        ('Laurens', 'Laurens County')
+        ('Williamsburg', 'Williamsburg County'),
+        ('York', 'York County')
     ], validators=[DataRequired(message="Please select a county")])
     
     price = DecimalField('Price ($)', validators=[
@@ -61,14 +99,52 @@ class LoginForm(FlaskForm):
 class SearchForm(FlaskForm):
     county = SelectField('County', choices=[
         ('', 'All Counties'),
-        ('Oconee', 'Oconee County'),
-        ('Pickens', 'Pickens County'),
+        ('Abbeville', 'Abbeville County'),
+        ('Aiken', 'Aiken County'),
+        ('Allendale', 'Allendale County'),
         ('Anderson', 'Anderson County'),
-        ('Greenville', 'Greenville County'),
-        ('Spartanburg', 'Spartanburg County'),
+        ('Bamberg', 'Bamberg County'),
+        ('Barnwell', 'Barnwell County'),
+        ('Beaufort', 'Beaufort County'),
+        ('Berkeley', 'Berkeley County'),
+        ('Calhoun', 'Calhoun County'),
+        ('Charleston', 'Charleston County'),
         ('Cherokee', 'Cherokee County'),
+        ('Chester', 'Chester County'),
+        ('Chesterfield', 'Chesterfield County'),
+        ('Clarendon', 'Clarendon County'),
+        ('Colleton', 'Colleton County'),
+        ('Darlington', 'Darlington County'),
+        ('Dillon', 'Dillon County'),
+        ('Dorchester', 'Dorchester County'),
+        ('Edgefield', 'Edgefield County'),
+        ('Fairfield', 'Fairfield County'),
+        ('Florence', 'Florence County'),
+        ('Georgetown', 'Georgetown County'),
+        ('Greenville', 'Greenville County'),
+        ('Greenwood', 'Greenwood County'),
+        ('Hampton', 'Hampton County'),
+        ('Horry', 'Horry County'),
+        ('Jasper', 'Jasper County'),
+        ('Kershaw', 'Kershaw County'),
+        ('Lancaster', 'Lancaster County'),
+        ('Laurens', 'Laurens County'),
+        ('Lee', 'Lee County'),
+        ('Lexington', 'Lexington County'),
+        ('Marion', 'Marion County'),
+        ('Marlboro', 'Marlboro County'),
+        ('McCormick', 'McCormick County'),
+        ('Newberry', 'Newberry County'),
+        ('Oconee', 'Oconee County'),
+        ('Orangeburg', 'Orangeburg County'),
+        ('Pickens', 'Pickens County'),
+        ('Richland', 'Richland County'),
+        ('Saluda', 'Saluda County'),
+        ('Spartanburg', 'Spartanburg County'),
+        ('Sumter', 'Sumter County'),
         ('Union', 'Union County'),
-        ('Laurens', 'Laurens County')
+        ('Williamsburg', 'Williamsburg County'),
+        ('York', 'York County')
     ], validators=[Optional()])
     
     min_price = DecimalField('Minimum Price', validators=[
@@ -88,6 +164,18 @@ class SearchForm(FlaskForm):
         ('price_high', 'Price: High to Low'),
         ('featured', 'Featured First')
     ], default='newest')
+
+# Complete list of SC counties for reference
+SC_COUNTIES = [
+    'Abbeville', 'Aiken', 'Allendale', 'Anderson', 'Bamberg', 'Barnwell',
+    'Beaufort', 'Berkeley', 'Calhoun', 'Charleston', 'Cherokee', 'Chester',
+    'Chesterfield', 'Clarendon', 'Colleton', 'Darlington', 'Dillon',
+    'Dorchester', 'Edgefield', 'Fairfield', 'Florence', 'Georgetown',
+    'Greenville', 'Greenwood', 'Hampton', 'Horry', 'Jasper', 'Kershaw',
+    'Lancaster', 'Laurens', 'Lee', 'Lexington', 'Marion', 'Marlboro',
+    'McCormick', 'Newberry', 'Oconee', 'Orangeburg', 'Pickens', 'Richland',
+    'Saluda', 'Spartanburg', 'Sumter', 'Union', 'Williamsburg', 'York'
+]
 
 class ContactForm(FlaskForm):
     name = StringField('Full Name', validators=[
