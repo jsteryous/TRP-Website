@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Numeric
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -8,7 +9,7 @@ class Listing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     county = db.Column(db.String(100), nullable=False)
-    price = db.Column(db.Decimal(10, 2), nullable=False)
+    price = db.Column(Numeric(10, 2), nullable=False)
     description = db.Column(db.Text, nullable=False)
     image_url = db.Column(db.String(500))
     featured = db.Column(db.Boolean, default=False)
